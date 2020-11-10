@@ -34,4 +34,15 @@ INSERT INTO employee_db.department (name) VALUES ("Finance");
 INSERT INTO employee_db.department (name) VALUES ("Sales");
 INSERT INTO employee_db.department (name) VALUES ("Legal");
 
+INSERT INTO employee_db.role (title, salary, department_id) VALUES ("C-Suite", 100000, 1);
+INSERT INTO employee_db.role (title, salary, department_id) VALUES ("Operations", 80000, 1);
+INSERT INTO employee_db.role (title, salary, department_id) VALUES ("Lead Engineer", 80000, 2);
+INSERT INTO employee_db.role (title, salary, department_id) VALUES ("Software Engineer", 80000, 2);
+INSERT INTO employee_db.role (title, salary, department_id) VALUES ("UI/UX", 80000, 3);
+INSERT INTO employee_db.role (title, salary, department_id) VALUES ("Accountant", 80000, 4);
+INSERT INTO employee_db.role (title, salary, department_id) VALUES ("Sales Lead", 80000, 5);
+INSERT INTO employee_db.role (title, salary, department_id) VALUES ("Salesperson", 80000, 5);
+INSERT INTO employee_db.role (title, salary, department_id) VALUES ("Legal Team Lead", 80000, 6);
+INSERT INTO employee_db.role (title, salary, department_id) VALUES ("Lawyer", 80000, 6);
+
 

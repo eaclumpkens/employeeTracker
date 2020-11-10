@@ -1,5 +1,7 @@
+const { readFileSync } = require("fs");
 const inquirer = require("inquirer");
 const mysql = require("mysql");
+// const { allowedNodeEnvironmentFlags } = require("process");
 
 var connection = mysql.createConnection({
     host: "localhost",
@@ -14,6 +16,8 @@ connection.connect(function(err) {
     console.log(`connected as id ${connection.thread}`);
     runApp();
 });
+
+// RUN APP
 
 function runApp() {
     console.log("running app...")
@@ -45,6 +49,8 @@ function runApp() {
     });
 };
 
+// VIEW ALL EMPLOYEES
+
 function viewAll(){
     var query = connection.query(
         "SELECT * FROM employees",
@@ -52,25 +58,88 @@ function viewAll(){
             if (err) throw err;
             console.log(" Current employee data...");
         }
-    )
+    );
 
     runApp();
 };
 
-function viewDep(){
-   
-    inquirer.prompt([
-        {
+// VIEW EMPLOYEES BY DEPARTMENT
 
-        }
-    ])
-};
+// function viewDep(){
+
+//     inquirer.prompt({
+//             type: "list",
+//             message: "Which department's employees would you like to view?",
+//             name: "deptChoice",
+//             choices: ["Administrative", "Engineering", "Design", "Finance", "Sales", "Legal"]
+//         }).then(function(choice){
+//             var query = connection.query(
+//                 `SELECT * FROM employees WHERE department_id.name = ${choice.deptChoice}`,
+//                 function (err, res) {
+//                     if (err) throw err;
+//                     console.log(`${choice.deptChoice} department data...`)
+//                     return res;
+//             }
+//         );
+
+//         runApp();
+//     })
+
+// };
+
+// VIEW EMPLOYEES BY MANAGER
 
 function viewMan(){
 
 };
 
+// ADD NEW EMPLOYEE
+
 function addEmp(){
+    console.log("input new employee data...")
+
+    connection.query("Select * FROM roles", function(err, res) {
+        if (err) throw err;
+        inquirer.prompt([
+            {
+                type: "input",
+                messages: "first name: ",
+                name: "firstName"
+            },
+            {
+                type: "input",
+                messages: "last name: ",
+                name: "lastName"
+            },
+            {
+                type: "list",
+                message: "employee role : ",
+                name: "roleChoice",
+                choices: function() {
+                    const roles = [];
+                    for (var i = 0; i < res.role; i++) {
+                        roles.push(res[i].title);
+                    }
+
+                    return roles;
+                }
+            },
+            {
+                type: "input",
+                message: "employee salary : ",
+                name: "salaryChoice",
+            }
+        ]).then(function(choice) {
+    
+            var query = connection.query(
+                `INSERT INTO employee_db.role (title, salary, department_id) 
+                SELECT '${choice.roleChoice}', '${choice.salaryChoice}', '${choice.depChoice}', name FROM employee_db.department LIMIT 1;`
+            )
+    
+    
+        });
+
+    })
 
 };
 
