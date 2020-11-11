@@ -23,10 +23,9 @@ CREATE TABLE employees (
     first_name VARCHAR(30) NOT NULL,
     last_name VARCHAR(30) NOT NULL,
     role_id int NOT NULL,
-    manager_id int,
+    manager VARCHAR(60),
     PRIMARY KEY (id),
     FOREIGN KEY (role_id) REFERENCES roles(id),
-    FOREIGN KEY (manager_id) REFERENCES employees(id)
 );
 
 INSERT INTO employee_db.departments (name) VALUES ("Administrative");

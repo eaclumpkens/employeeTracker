@@ -188,10 +188,27 @@ function addEmp(){
                 choices: pullManagers()
             }
         ]).then(function(choice) {
-            
 
-
-            runApp();
+            var roleId;
+            var query = connection.query(
+                `SELECT * FROM roles WHERE title = '${choice.roleChoice}'`,
+                function(err, res)  {
+                    if (err) throw err;
+                    console.log(res);
+                    roleId = res;
+                    return roleId;
+                }
+            )
+    
+            var query = connection.query(
+                `INSERT INTO employees (first_name, last_name, role_id, manager)
+                VALUES ('${choice.firstName}', '${choice.lastName}', (SELECT id FROM roles WHERE title = '${choice.roleChoice}'), '${choice.manChoice}');`,
+                function(err) {
+                    if (err) throw err;
+                    console.log(`${choice.firstName} ${choice.lastName} added to employee database...`)
+                    runApp();
+                }
+            )
         });
 
     })
