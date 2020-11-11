@@ -1,4 +1,5 @@
-const { readFileSync } = require("fs");
+const util = require("util");
+const fs = require("fs");
 const inquirer = require("inquirer");
 const mysql = require("mysql");
 // const { allowedNodeEnvironmentFlags } = require("process");
@@ -17,30 +18,24 @@ connection.connect(function(err) {
     runApp();
 });
 
-//  Functions
-
 function pullManagers() {
-    var manArray = ["None"];
-    var query = connection.query(
-        `SELECT * FROM roles WHERE manager = '1';`,
-        function(err, data) {
 
-            for (var i = 0; i < data.length; i++) {
-                var query = connection.query(
-                    `SELECT * FROM employees WHERE role_id = '${data[i].id}'`,
-                    function(err, res) { 
-                        if (err) throw err;
-                        for (var j = 0; j < res.length; j++) {
-                            manArray.push(`${res[j].first_name} ${res[j].last_name}`);
-                        }
-                    }
-                )
-            }  
+    var managerList = ["None"];
+    var query =  connection.query(
+        "SELECT * FROM employees INNER JOIN roles ON roles.id = employees.role_id WHERE roles.manager = 1;",
+        function(err, res) {
+            
+            if (err) throw err;
+            for (var i = 0; i < res.length; i++) {
+                managerList.push(`${res[i].first_name} ${res[i].last_name}`);
+            }
         }
     )
 
-    return manArray;
-}
+    return managerList;
+};
+
+
 
 // RUN APP
 
@@ -82,13 +77,10 @@ function viewAll(){
         "SELECT * FROM employees",
         function (err, res) {
             if (err) throw err;
-            console.log(res);
-
-            
+            console.table(res);
+            runApp();
         }
     );
-
-    runApp();
 };
 
 // VIEW EMPLOYEES BY DEPARTMENT
@@ -127,12 +119,10 @@ function viewDep(){
                                     var query = connection.query(
                                         `SELECT * FROM employees WHERE role_id = '${result[i].id}';`,
                                         function(err, data) {
-                                            console.log(data);
+                                            console.table(data);
                                         }
                                     )
                                 }
-
-                                
                             }
                         )
                     }      
@@ -147,7 +137,22 @@ function viewDep(){
 // VIEW EMPLOYEES BY MANAGER
 
 function viewMan(){
-    runApp();
+    
+    inquirer.prompt({
+        type: "list",
+        message: "Select a manager: ",
+        name: "manChoice",
+        choices: pullManagers()
+    }).then(function(choice) {
+        
+        var query = connection.query(
+            `SELECT * FROM employees WHERE manager = '${choice.manChoice}';`,
+            function(err) {
+                if (err) throw (err);
+                runApp();
+            }
+        )
+    })
 };
 
 // ADD NEW EMPLOYEE
@@ -188,17 +193,6 @@ function addEmp(){
                 choices: pullManagers()
             }
         ]).then(function(choice) {
-
-            var roleId;
-            var query = connection.query(
-                `SELECT * FROM roles WHERE title = '${choice.roleChoice}'`,
-                function(err, res)  {
-                    if (err) throw err;
-                    console.log(res);
-                    roleId = res;
-                    return roleId;
-                }
-            )
     
             var query = connection.query(
                 `INSERT INTO employees (first_name, last_name, role_id, manager)
@@ -212,7 +206,6 @@ function addEmp(){
         });
 
     })
-
 };
 
 function removeEmp(){

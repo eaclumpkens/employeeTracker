@@ -23,7 +23,9 @@
   },
   "homepage": "https://github.com/eaclumpkens/employeeTracker#readme",
   "dependencies": {
+    "fs": "0.0.1-security",
     "inquirer": "^7.3.3",
-    "mysql": "^2.18.1"
+    "mysql": "^2.18.1",
+    "util": "^0.12.3"
   }
 }
