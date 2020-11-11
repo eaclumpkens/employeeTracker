@@ -90,28 +90,31 @@ function viewDep(){
                 console.log(`Fetching ${choice.depChoice} Department Data...`);
                 
                 var query = connection.query(
-                    `SELECT * FROM employee_db.departments WHERE name = '${choice.depChoice}';`,
+                    `SELECT * FROM departments WHERE name = '${choice.depChoice}';`,
                     function(err, res) {
-
                         if (err) throw err;
-                        var query = connection.query(
-                            `SELECT * FROM roles WHERE department_id = '${res[0].id}';`,
-                            function(err, result) {
+                        
+                        for (var i = 0; i < res.length; i++) {
+                            console.log(res[i].id);
+        
+                            var query = connection.query(
+                                `SELECT * FROM roles WHERE department_id = '${res[i].id}';`,
+                                function(err, result) {
 
-                                if (err) throw err;
-                                var query = connection.query(
-                                    `SELECT * FROM employees WHERE role_id = '${result[0].id}';`,
-                                    function(err, data) {
-                                        if (err) throw err;
-                                        console.log(data);
-                                        runApp();
+                                    for (var j = 0; j < result.length; j++) {
+                                        var query = connection.query(
+                                            `SELECT * FROM employees WHERE role_id = '${result[i].id}';`,
+                                            function(err, data) {
+                                                console.log(data);
+                                            }
+                                        )
                                     }
-                                )
-                            }
-                        )
+                                }
+                            )
+                        }
+                        runApp();
                     }
                 );
-
             });
         }
     )
