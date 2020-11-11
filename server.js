@@ -17,6 +17,31 @@ connection.connect(function(err) {
     runApp();
 });
 
+//  Functions
+
+function pullManagers() {
+    var manArray = ["None"];
+    var query = connection.query(
+        `SELECT * FROM roles WHERE manager = '1';`,
+        function(err, data) {
+
+            for (var i = 0; i < data.length; i++) {
+                var query = connection.query(
+                    `SELECT * FROM employees WHERE role_id = '${data[i].id}'`,
+                    function(err, res) { 
+                        if (err) throw err;
+                        for (var j = 0; j < res.length; j++) {
+                            manArray.push(`${res[j].first_name} ${res[j].last_name}`);
+                        }
+                    }
+                )
+            }  
+        }
+    )
+
+    return manArray;
+}
+
 // RUN APP
 
 function runApp() {
@@ -59,9 +84,11 @@ function viewAll(){
             if (err) throw err;
             console.log(res);
 
-            runApp();
+            
         }
     );
+
+    runApp();
 };
 
 // VIEW EMPLOYEES BY DEPARTMENT
@@ -93,38 +120,34 @@ function viewDep(){
                     `SELECT * FROM departments WHERE name = '${choice.depChoice}';`,
                     function(err, res) {
                         if (err) throw err;
-                        
-                        for (var i = 0; i < res.length; i++) {
-                            console.log(res[i].id);
-        
-                            var query = connection.query(
-                                `SELECT * FROM roles WHERE department_id = '${res[i].id}';`,
-                                function(err, result) {
-
-                                    for (var j = 0; j < result.length; j++) {
-                                        var query = connection.query(
-                                            `SELECT * FROM employees WHERE role_id = '${result[i].id}';`,
-                                            function(err, data) {
-                                                console.log(data);
-                                            }
-                                        )
-                                    }
+                        var query = connection.query(
+                            `SELECT * FROM roles WHERE department_id = '${res[0].id}';`,
+                            function(err, result) {
+                                for (var i = 0; i < result.length; i++) {
+                                    var query = connection.query(
+                                        `SELECT * FROM employees WHERE role_id = '${result[i].id}';`,
+                                        function(err, data) {
+                                            console.log(data);
+                                        }
+                                    )
                                 }
-                            )
-                        }
-                        runApp();
-                    }
+
+                                
+                            }
+                        )
+                    }      
                 );
             });
         }
     )
-
+    
+    runApp();
 };
 
 // VIEW EMPLOYEES BY MANAGER
 
 function viewMan(){
-
+    runApp();
 };
 
 // ADD NEW EMPLOYEE
@@ -147,7 +170,7 @@ function addEmp(){
             },
             {
                 type: "list",
-                message: "employee role : ",
+                message: "employee role: ",
                 name: "roleChoice",
                 choices: function() {
                     const roles = [];
@@ -159,9 +182,10 @@ function addEmp(){
                 }
             },
             {
-                type: "input",
-                message: "employee salary : ",
-                name: "salaryChoice",
+                type: "list",
+                message: "employee manager: ",
+                name: "manChoice",
+                choices: pullManagers()
             }
         ]).then(function(choice) {
             
@@ -175,17 +199,17 @@ function addEmp(){
 };
 
 function removeEmp(){
-
+    runApp();
 };
 
 function updateEmp(){
-
-};
+    runApp();
+};  
 
 function updateRol(){
-
+    runApp();
 };
 
 function updateMan() {
-
+    runApp();
 };
