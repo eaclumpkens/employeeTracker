@@ -18,25 +18,6 @@ connection.connect(function(err) {
     runApp();
 });
 
-function pullManagers() {
-
-    var managerList = ["None"];
-    var query =  connection.query(
-        "SELECT * FROM employees INNER JOIN roles ON roles.id = employees.role_id WHERE roles.manager = 1;",
-        function(err, res) {
-            
-            if (err) throw err;
-            for (var i = 0; i < res.length; i++) {
-                managerList.push(`${res[i].first_name} ${res[i].last_name}`);
-            }
-        }
-    )
-
-    return managerList;
-};
-
-
-
 // RUN APP
 
 function runApp() {
@@ -70,13 +51,14 @@ function runApp() {
     });
 };
 
-// VIEW ALL EMPLOYEES
+// VIEW ALL EMPLOYEE DATA
 
 function viewAll(){
     const query = connection.query(
         "SELECT * FROM employees",
         function (err, res) {
             if (err) throw err;
+            console.log("Rendering employees...");
             console.table(res);
             runApp();
         }
@@ -138,21 +120,37 @@ function viewDep(){
 
 function viewMan(){
     
-    inquirer.prompt({
-        type: "list",
-        message: "Select a manager: ",
-        name: "manChoice",
-        choices: pullManagers()
-    }).then(function(choice) {
-        
-        var query = connection.query(
-            `SELECT * FROM employees WHERE manager = '${choice.manChoice}';`,
-            function(err) {
-                if (err) throw (err);
-                runApp();
-            }
-        )
-    })
+    var query = connection.query(
+        "SELECT * FROM employees INNER JOIN roles ON roles.id = employees.role_id WHERE roles.manager = 1;",
+        function(err, res) {
+            if (err) throw err;
+            inquirer.prompt({
+                type: "list",
+                message: "Select a manager: ",
+                name: "manChoice",
+                choices: function() {
+                    const managers = [];
+                    for (var i = 0; i < res.length; i++) {
+                        managers.push(res[i].first_name + " " + res[i].last_name);
+                    }
+                    
+                    return managers;
+                } 
+            }).then(function(choice) {
+                
+                var query = connection.query(
+                    `SELECT * FROM employees WHERE manager = '${choice.manChoice}';`,
+                    function(err, result) {
+                        if (err) throw (err);
+                        console.table(result);
+                        runApp();
+                    }
+                )
+            })
+
+        }
+    )
+
 };
 
 // ADD NEW EMPLOYEE
@@ -209,7 +207,19 @@ function addEmp(){
 };
 
 function removeEmp(){
-    runApp();
+
+    inquirer.prompt({
+        type: "list",
+        message: "Choose employee to remove: ",
+        name: "remEmp",
+        choices: employeeNames()
+    }).then(function(choice) {
+
+        console.log(choice);
+        runApp();
+    })
+
+
 };
 
 function updateEmp(){
@@ -222,4 +232,35 @@ function updateRol(){
 
 function updateMan() {
     runApp();
+};
+
+// OTHERS
+
+function pullManagers() {
+
+    var managerArray= ["None"];
+    connection.query("SELECT * FROM employees INNER JOIN roles ON roles.id = employees.role_id WHERE roles.manager = 1;", (err, data) => {
+        if (err) throw err;
+        for (var i = 0; i < data.length; i++) {
+            managerArray.push(data[i].first_name + " " + data[i].last_name);
+        }
+        console.log(managerArray)
+        return managerArray;
+    });
+
+    return managerArray;
+};
+
+function employeeNames() {
+    var employeeArray = [];
+    connection.query("SELECT * FROM employees", (err, data) => {
+        if (err) throw err;
+        for (var i = 0; i < data.length; i++) {
+            employeeArray.push(data[i].first_name + " " + data[i].last_name);
+        }
+        console.table(employeeArray);
+        return employeeArray;
+    });
+
+    return employeeArray;
 };
