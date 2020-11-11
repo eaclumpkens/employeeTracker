@@ -36,9 +36,10 @@ function runApp() {
             "Update Employee Manager"
         ]
     }).then(function(choice) {
+
         switch (choice.userRequest) {
-            case "View All Employees": viewAll();
-            case "View All Employess by Department": viewDep(); break;
+            case "View All Employees": viewAll(); break;
+            case "View All Employees by Department": viewDep(); break;
             case "View All Employees by Manager": viewMan(); break;
             case "Add Employee": addEmp(); break;
             case "Remove Employee": removeEmp(); break;
@@ -52,40 +53,70 @@ function runApp() {
 // VIEW ALL EMPLOYEES
 
 function viewAll(){
-    var query = connection.query(
+    const query = connection.query(
         "SELECT * FROM employees",
         function (err, res) {
             if (err) throw err;
-            console.log(" Current employee data...");
+            console.log(res);
+
+            runApp();
         }
     );
-
-    runApp();
 };
 
 // VIEW EMPLOYEES BY DEPARTMENT
 
-// function viewDep(){
+function viewDep(){
+    console.log("Querying departments...");
 
-//     inquirer.prompt({
-//             type: "list",
-//             message: "Which department's employees would you like to view?",
-//             name: "deptChoice",
-//             choices: ["Administrative", "Engineering", "Design", "Finance", "Sales", "Legal"]
-//         }).then(function(choice){
-//             var query = connection.query(
-//                 `SELECT * FROM employees WHERE department_id.name = ${choice.deptChoice}`,
-//                 function (err, res) {
-//                     if (err) throw err;
-//                     console.log(`${choice.deptChoice} department data...`)
-//                     return res;
-//             }
-//         );
+    const query = connection.query(
+        "SELECT * FROM departments",
+        function(err, res) {
+            if (err) throw err;
+            
+            inquirer.prompt({
+                type: "list",
+                message: "Choose a department to pull up: ",
+                name: "depChoice",
+                choices: function() {
+                    const depts = [];
+                    for (var i = 0; i < res.length; i++) {
+                        depts.push(res[i].name);
+                    }
 
-//         runApp();
-//     })
+                    return depts;
+                }
+            }).then(function(choice) {
+                console.log(`Fetching ${choice.depChoice} Department Data...`);
+                
+                var query = connection.query(
+                    `SELECT * FROM employee_db.departments WHERE name = '${choice.depChoice}';`,
+                    function(err, res) {
 
-// };
+                        if (err) throw err;
+                        var query = connection.query(
+                            `SELECT * FROM roles WHERE department_id = '${res[0].id}';`,
+                            function(err, result) {
+
+                                if (err) throw err;
+                                var query = connection.query(
+                                    `SELECT * FROM employees WHERE role_id = '${result[0].id}';`,
+                                    function(err, data) {
+                                        if (err) throw err;
+                                        console.log(data);
+                                        runApp();
+                                    }
+                                )
+                            }
+                        )
+                    }
+                );
+
+            });
+        }
+    )
+
+};
 
 // VIEW EMPLOYEES BY MANAGER
 
@@ -98,17 +129,17 @@ function viewMan(){
 function addEmp(){
     console.log("input new employee data...")
 
-    connection.query("Select * FROM roles", function(err, res) {
+    connection.query("SELECT * FROM roles", function(err, res) {
         if (err) throw err;
         inquirer.prompt([
             {
                 type: "input",
-                messages: "first name: ",
+                message: "employee first name: ",
                 name: "firstName"
             },
             {
                 type: "input",
-                messages: "last name: ",
+                message: "employee last name: ",
                 name: "lastName"
             },
             {
@@ -117,7 +148,7 @@ function addEmp(){
                 name: "roleChoice",
                 choices: function() {
                     const roles = [];
-                    for (var i = 0; i < res.role; i++) {
+                    for (var i = 0; i < res.length; i++) {
                         roles.push(res[i].title);
                     }
 
@@ -130,13 +161,10 @@ function addEmp(){
                 name: "salaryChoice",
             }
         ]).then(function(choice) {
-    
-            var query = connection.query(
-                `INSERT INTO employee_db.role (title, salary, department_id) 
-                SELECT '${choice.roleChoice}', '${choice.salaryChoice}', '${choice.depChoice}', name FROM employee_db.department LIMIT 1;`
-            )
-    
-    
+            
+
+
+            runApp();
         });
 
     })
