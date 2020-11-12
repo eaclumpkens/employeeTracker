@@ -212,18 +212,40 @@ function addEmp(){
 
 function removeEmp(){
 
-    inquirer.prompt({
-        type: "list",
-        message: "Choose employee to remove: ",
-        name: "remEmp",
-        choices: employeeNames()
-    }).then(function(choice) {
+    var query = connection.query(
+        "SELECT * FROM employees",
+        function (err, res) {
+            if (err) throw err;
 
-        console.log(choice);
-        runApp();
-    })
+            inquirer.prompt({
+                type: "list",
+                message: "Choose employee to remove: ",
+                name: "remEmp",
+                choices: function() {
+                    var employees = [];
+                    for (var i = 0; i < res.length; i++) {
+                        employees.push(res[i].first_name + " " + res[i].last_name);
+                    }
 
+                    return employees;
+                }
+            }).then(function(choice) {
+                console.log(`Removing ${choice.remEmp} as an employee...`);
+                var nameArray = choice.remEmp.split(" ");
+                var firstName = nameArray[0];
+                var lastName = nameArray[1];
 
+                var query = connection.query(
+                    `DELETE FROM employees WHERE first_name = '${firstName}' AND last_name = '${lastName}';`,
+                    function (err) {
+                        if (err) throw err;
+                        console.log("Employee deleted.");
+                        runApp();
+                    }
+                )
+            })
+        }
+    )
 };
 
 function updateEmp(){
