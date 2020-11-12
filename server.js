@@ -54,7 +54,8 @@ function runApp() {
 // VIEW ALL EMPLOYEE DATA
 
 function viewAll(){
-    const query = connection.query(
+
+    var query = connection.query(
         "SELECT * FROM employees",
         function (err, res) {
             if (err) throw err;
@@ -63,6 +64,7 @@ function viewAll(){
             runApp();
         }
     );
+
 };
 
 // VIEW EMPLOYEES BY DEPARTMENT
@@ -74,7 +76,6 @@ function viewDep(){
         "SELECT * FROM departments",
         function(err, res) {
             if (err) throw err;
-            
             inquirer.prompt({
                 type: "list",
                 message: "Choose a department to pull up: ",
@@ -88,8 +89,6 @@ function viewDep(){
                     return depts;
                 }
             }).then(function(choice) {
-                console.log(`Fetching ${choice.depChoice} Department Data...`);
-                
                 var query = connection.query(
                     `SELECT * FROM departments WHERE name = '${choice.depChoice}';`,
                     function(err, res) {
@@ -97,22 +96,26 @@ function viewDep(){
                         var query = connection.query(
                             `SELECT * FROM roles WHERE department_id = '${res[0].id}';`,
                             function(err, result) {
+                                if (err) throw err;
+                                console.log(`Fetching ${choice.depChoice} Department Data...`);
                                 for (var i = 0; i < result.length; i++) {
                                     var query = connection.query(
                                         `SELECT * FROM employees WHERE role_id = '${result[i].id}';`,
                                         function(err, data) {
-                                            console.table(data);
+                                            if (err) throw err;
+                                            console.table(data)
                                         }
                                     )
                                 }
                             }
                         )
                     }      
-                );
+                ); 
             });
         }
     )
-    
+
+
     runApp();
 };
 
@@ -133,7 +136,7 @@ function viewMan(){
                     for (var i = 0; i < res.length; i++) {
                         managers.push(res[i].first_name + " " + res[i].last_name);
                     }
-                    
+
                     return managers;
                 } 
             }).then(function(choice) {
@@ -175,12 +178,13 @@ function addEmp(){
                 type: "list",
                 message: "employee role: ",
                 name: "roleChoice",
-                choices: function() {
+                choices: function() {   
+                    console.log(res.length);
                     const roles = [];
                     for (var i = 0; i < res.length; i++) {
                         roles.push(res[i].title);
                     }
-
+                    
                     return roles;
                 }
             },
@@ -244,23 +248,9 @@ function pullManagers() {
         for (var i = 0; i < data.length; i++) {
             managerArray.push(data[i].first_name + " " + data[i].last_name);
         }
-        console.log(managerArray)
+
         return managerArray;
     });
 
     return managerArray;
-};
-
-function employeeNames() {
-    var employeeArray = [];
-    connection.query("SELECT * FROM employees", (err, data) => {
-        if (err) throw err;
-        for (var i = 0; i < data.length; i++) {
-            employeeArray.push(data[i].first_name + " " + data[i].last_name);
-        }
-        console.table(employeeArray);
-        return employeeArray;
-    });
-
-    return employeeArray;
 };
