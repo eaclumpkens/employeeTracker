@@ -259,7 +259,7 @@ function updateEmp(){
                     choices: function() {
                         var employees = [];
                         for (var i = 0; i < res.length; i++) {
-                            employees.push(res[i].first_name + " " + res[i].last_name);
+                            employees.push(res[i].id + " " + res[i].first_name + " " + res[i].last_name);
                         }
                         return employees;
                     }   
@@ -278,26 +278,61 @@ function updateEmp(){
                 }
             ]).then(function(choice) {
                 var nameArray = choice.selEmp.split(" ");
-                var firstName = nameArray[0];
-                var lastName = nameArray[1];
+                var id = nameArray[0];
 
                 // NEW NAME
-                if (choice.info === "first_name" || "last_name") {
+                if (choice.info === "first_name" || choice.info === "last_name") {
                     inquirer.prompt({
                         type: "input",
                         message: `Input new ${choice.info}: `,
                         name: "newName"
                     }).then(function(name) {
                         var query = connection.query(
-                            `UPDATE employees SET ${choice.info} = '${name.newName}' WHERE first_name = '${firstName}' AND last_name = '${lastName}';`,
+                            `UPDATE employees SET ${choice.info} = '${name.newName}' WHERE id = ${id};`,
                             function(err) {
                                 if (err) throw err;
                                 console.log("Employee name succesfully updated.");
                                 runApp();
                             }
                         )
-                    })
+                    });
                 } 
+                // NEW MANAGER
+                else if (choice.info === "manager") {
+                    var query = connection.query(
+                        "SELECT * FROM employees INNER JOIN roles ON roles.id = employees.role_id WHERE roles.manager = 1;",
+                        function(err, res) {
+                            if (err) throw err;
+                            inquirer.prompt({
+                                type: "list",
+                                message: "Choose new manager: ",
+                                name: "newMan",
+                                choices: function() {
+                                    const managers = [];
+                                    for (var i = 0; i < res.length; i++) {
+                                        managers.push(res[i].first_name + " " + res[i].last_name);
+                                    }
+                
+                                    return managers;
+                                } 
+                            }).then(function(manager) {
+                                var query = connection.query(
+                                    `UPDATE employees SET manager  = '${manager.newMan}' WHERE id = ${id};`,
+                                    function(err) {
+                                        if (err) throw (err);
+                                        console.log("Employee's manager succesfully updated.");
+                                        runApp();
+                                    }
+                                )
+                            })
+                
+                        }
+                    )
+
+
+                } else {
+                    runApp();
+                }
             });
         }
     );
