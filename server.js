@@ -102,7 +102,6 @@ function viewDepts() {
         "SELECT * FROM departments",
         function(err, res) {
             if (err) throw err;
-            console.log(`\n \nDepartment Data Table`);
             console.table(res);
             runApp();
         }
@@ -124,7 +123,6 @@ function viewRoles() {
         "SELECT * FROM roles",
         function(err, res) {
             if (err) throw err;
-            console.log(`\n \nRole Data Table`);
             console.table(res);
             runApp();
         }
