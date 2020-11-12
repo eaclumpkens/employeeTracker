@@ -32,9 +32,7 @@ function runApp() {
             "View All Employees by Manager", 
             "Add Employee", 
             "Remove Employee", 
-            "Update Employee", 
-            "Update Employee Role", 
-            "Update Employee Manager"
+            "Update Employee Information"
         ]
     }).then(function(choice) {
 
@@ -44,9 +42,7 @@ function runApp() {
             case "View All Employees by Manager": viewMan(); break;
             case "Add Employee": addEmp(); break;
             case "Remove Employee": removeEmp(); break;
-            case "Update Employee": updateEmp(); break;
-            case "Update Employee Role": updateRol(); break;
-            case "Update Employee Manager": updateMan(); break;
+            case "Update Employee Information": updateEmp(); break;
         }
     });
 };
@@ -242,23 +238,72 @@ function removeEmp(){
                         console.log("Employee deleted.");
                         runApp();
                     }
-                )
-            })
+                );
+            });
         }
     )
 };
 
 function updateEmp(){
-    runApp();
+
+    var query = connection.query(
+        "SELECT * FROM employees",
+        function (err, res) {
+            if (err) throw err;
+
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: "Which employee's information would you like to edit?",
+                    name: "selEmp",
+                    choices: function() {
+                        var employees = [];
+                        for (var i = 0; i < res.length; i++) {
+                            employees.push(res[i].first_name + " " + res[i].last_name);
+                        }
+                        return employees;
+                    }   
+                },
+                {
+                    type: "list",
+                    message: "Which of their information would you like to edit?",
+                    name: "info",
+                    choices: [
+                        "first_name",
+                        "last_name",
+                        "manager",
+                        "role_id",
+                        "salary"
+                    ]
+                }
+            ]).then(function(choice) {
+                var nameArray = choice.selEmp.split(" ");
+                var firstName = nameArray[0];
+                var lastName = nameArray[1];
+
+                // NEW NAME
+                if (choice.info === "first_name" || "last_name") {
+                    inquirer.prompt({
+                        type: "input",
+                        message: `Input new ${choice.info}: `,
+                        name: "newName"
+                    }).then(function(name) {
+                        var query = connection.query(
+                            `UPDATE employees SET ${choice.info} = '${name.newName}' WHERE first_name = '${firstName}' AND last_name = '${lastName}';`,
+                            function(err) {
+                                if (err) throw err;
+                                console.log("Employee name succesfully updated.");
+                                runApp();
+                            }
+                        )
+                    })
+                } 
+            });
+        }
+    );
+
+    
 };  
-
-function updateRol(){
-    runApp();
-};
-
-function updateMan() {
-    runApp();
-};
 
 // OTHERS
 
