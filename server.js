@@ -175,7 +175,6 @@ function addEmp(){
                 message: "employee role: ",
                 name: "roleChoice",
                 choices: function() {   
-                    console.log(res.length);
                     const roles = [];
                     for (var i = 0; i < res.length; i++) {
                         roles.push(res[i].title);
@@ -272,7 +271,7 @@ function updateEmp(){
                         "first_name",
                         "last_name",
                         "manager",
-                        "role_id",
+                        "role",
                         "salary"
                     ]
                 }
@@ -280,7 +279,7 @@ function updateEmp(){
                 var nameArray = choice.selEmp.split(" ");
                 var id = nameArray[0];
 
-                // NEW NAME
+                // UPDATE NAME
                 if (choice.info === "first_name" || choice.info === "last_name") {
                     inquirer.prompt({
                         type: "input",
@@ -297,7 +296,8 @@ function updateEmp(){
                         )
                     });
                 } 
-                // NEW MANAGER
+
+                // UPDATE MANAGER
                 else if (choice.info === "manager") {
                     var query = connection.query(
                         "SELECT * FROM employees INNER JOIN roles ON roles.id = employees.role_id WHERE roles.manager = 1;",
@@ -317,7 +317,7 @@ function updateEmp(){
                                 } 
                             }).then(function(manager) {
                                 var query = connection.query(
-                                    `UPDATE employees SET manager  = '${manager.newMan}' WHERE id = ${id};`,
+                                    `UPDATE employees SET manager = '${manager.newMan}' WHERE id = ${id};`,
                                     function(err) {
                                         if (err) throw (err);
                                         console.log("Employee's manager succesfully updated.");
@@ -325,12 +325,46 @@ function updateEmp(){
                                     }
                                 )
                             })
+                        }
+                    )
+                } 
                 
+                // UPDATE ROLE
+                else if (choice.info === "role") {
+                    var query = connection.query(
+                        "SELECT * FROM roles",
+                        function(err, res) {
+                            if (err) throw err;
+                            inquirer.prompt({
+                                type: "list",
+                                message: "Select new role: ",
+                                name: "newRole",
+                                choices: function() {
+                                    var roles = [];
+                                    for (var i = 0; i < res.length; i++) {
+                                        roles.push(res[i].title);
+                                    }
+                                    
+                                    return roles;
+                                }
+                            }).then(function(role) {
+                                
+                                var query = connection.query(
+                                    `UPDATE employees SET role_id = (SELECT id FROM roles WHERE title = '${role.newRole}') WHERE id = ${id};`,
+                                    function (err) {
+                                        if (err) throw err;
+                                        console.log("Employee role successfully updated.");
+                                        runApp();
+                                    }
+                                )
+                            })
+
                         }
                     )
 
-
-                } else {
+                } 
+                
+                else {
                     runApp();
                 }
             });
