@@ -28,44 +28,76 @@ function runApp() {
         name: "userRequest",
         choices: [
             "View All Employees", 
+            "View Departments",
+            "View Roles",
             "View All Employees by Department", 
             "View All Employees by Manager", 
             "Add Employee", 
+            "Edit Employee Information",
             "Remove Employee", 
-            "Update Employee Information"
+            "Edit Departments",
+            "Edit Roles",
+            "EXIT"
         ]
     }).then(function(choice) {
 
         switch (choice.userRequest) {
             case "View All Employees": viewAll(); break;
-            case "View All Employees by Department": viewDep(); break;
-            case "View All Employees by Manager": viewMan(); break;
+            case "View Departments": viewDepts(); break;
+            case "View Roles": viewRoles(); break;
+            case "View All Employees by Department": byDepts(); break;
+            case "View All Employees by Manager": byMans(); break;
             case "Add Employee": addEmp(); break;
+            case "Edit Employee Information": editEmp(); break;
             case "Remove Employee": removeEmp(); break;
-            case "Update Employee Information": updateEmp(); break;
+            case "Edit Departments": editDepts(); break;
+            case "Edit Roles": editRoles(); break;
+            case "EXIT": connection.end(); break;
         }
     });
 };
 
-// VIEW ALL EMPLOYEE DATA
+// VIEW DATA
 
 function viewAll(){
-
     var query = connection.query(
         "SELECT * FROM employees",
         function (err, res) {
             if (err) throw err;
-            console.log("Rendering employees...");
+            console.log(`\n \nEmployee Data Table`);
             console.table(res);
             runApp();
         }
     );
-
 };
+
+function viewDepts() {
+    var query = connection.query(
+        "SELECT * FROM departments",
+        function(err, res) {
+            if (err) throw err;
+            console.log(`\n \nDepartment Data Table`);
+            console.table(res);
+            runApp();
+        }
+    )
+};
+
+function viewRoles() {
+    var query = connection.query(
+        "SELECT * FROM roles",
+        function(err, res) {
+            if (err) throw err;
+            console.log(`\n \nRole Data Table`);
+            console.table(res);
+            runApp();
+        }
+    )
+}
 
 // VIEW EMPLOYEES BY DEPARTMENT
 
-function viewDep(){
+function byDepts(){
     console.log("Querying departments...");
 
     const query = connection.query(
@@ -107,7 +139,7 @@ function viewDep(){
                         )
                     }      
                 ); 
-            });
+            })
         }
     )
 
@@ -117,7 +149,7 @@ function viewDep(){
 
 // VIEW EMPLOYEES BY MANAGER
 
-function viewMan(){
+function byMans(){
     
     var query = connection.query(
         "SELECT * FROM employees INNER JOIN roles ON roles.id = employees.role_id WHERE roles.manager = 1;",
@@ -217,7 +249,7 @@ function removeEmp(){
                 message: "Choose employee to remove: ",
                 name: "remEmp",
                 choices: function() {
-                    var employees = [];
+                    var employees = ["GO BACK"];
                     for (var i = 0; i < res.length; i++) {
                         employees.push(res[i].first_name + " " + res[i].last_name);
                     }
@@ -225,25 +257,29 @@ function removeEmp(){
                     return employees;
                 }
             }).then(function(choice) {
-                console.log(`Removing ${choice.remEmp} as an employee...`);
                 var nameArray = choice.remEmp.split(" ");
                 var firstName = nameArray[0];
                 var lastName = nameArray[1];
 
-                var query = connection.query(
-                    `DELETE FROM employees WHERE first_name = '${firstName}' AND last_name = '${lastName}';`,
-                    function (err) {
-                        if (err) throw err;
-                        console.log("Employee deleted.");
-                        runApp();
-                    }
-                );
+                if (choice.remEmp === "GO BACK") {
+                    runApp();
+                } else {
+                    console.log(`Removing ${choice.remEmp} as an employee...`);
+                    var query = connection.query(
+                        `DELETE FROM employees WHERE first_name = '${firstName}' AND last_name = '${lastName}';`,
+                        function (err) {
+                            if (err) throw err;
+                            console.log("Employee deleted.");
+                            runApp();
+                        }
+                    );
+                }
             });
         }
     )
 };
 
-function updateEmp(){
+function editEmp(){
 
     var query = connection.query(
         "SELECT * FROM employees",
@@ -271,8 +307,7 @@ function updateEmp(){
                         "first_name",
                         "last_name",
                         "manager",
-                        "role",
-                        "salary"
+                        "role"
                     ]
                 }
             ]).then(function(choice) {
@@ -330,7 +365,7 @@ function updateEmp(){
                 } 
                 
                 // UPDATE ROLE
-                else if (choice.info === "role") {
+                else {
                     var query = connection.query(
                         "SELECT * FROM roles",
                         function(err, res) {
@@ -363,16 +398,130 @@ function updateEmp(){
                     )
 
                 } 
-                
-                else {
-                    runApp();
-                }
             });
         }
-    );
-
-    
+    ); 
 };  
+
+
+// EDIT DEPARTMENTS
+
+function editDepts() {
+   
+    inquirer.prompt({
+            type: "list",
+            message: "What would you like to do?",
+            name: "deptQuery",
+            choices: [
+                "New Department",
+                "Edit Department",
+                "Delete Department"
+            ]
+    }).then(function(choice){
+
+        // NEW DEPARTMENT
+        if (choice.deptQuery === "New Department") {
+            
+            inquirer.prompt({
+                type: "input",
+                message: "New Department Name: ",
+                name: "newDept"
+            }).then(function(selection){
+
+                var query = connection.query(
+                    `INSERT INTO departments SET name = '${selection.newDept}'`,
+                    function(err) {
+                        if (err) throw err;
+                        console.log("Succesfully added new department.");
+                        runApp();
+                    }
+                )
+
+            }) 
+
+        } 
+        
+        // EDIT DEPARTMENT
+        else if (choice.deptQuery === "Edit Department") {
+
+            var query = connection.query(
+                "SELECT * FROM departments",
+                function(err, res) {
+                    if (err) throw  err;
+                    inquirer.prompt({
+                        type: "list",
+                        message: "Which department would you like to edit?",
+                        name: "deptEdit",
+                        choices: function() {
+                            var depts = [];
+                            for (var i = 0; i < res.length; i++) {
+                                depts.push(res[i].id + " " + res[i].name);
+                            }
+
+                            return depts;
+                        }
+                    }).then(function(department) {
+                        var deptArray = department.deptEdit.split(" ");
+                        var id = deptArray[0];
+                        
+                        inquirer.prompt({
+                            type: "input",
+                            message: "Input new department name: ",
+                            name: "deptTitle"
+                        }).then(function(choice){
+                            var query = connection.query(
+                                `UPDATE departments SET name = '${choice.deptTitle}' WHERE id = '${id}';`,
+                                function(err) {
+                                    if (err) throw err;
+                                    console.log(`\n \nDepartment succesfully updated.`);
+                                    runApp();
+                                }
+                            )
+                        })
+                    })
+
+                }
+            )
+
+
+        } else {
+            var query = connection.query(
+                "SELECT * FROM departments",
+                function(err, res) {
+                    if (err) throw  err;
+                    inquirer.prompt({
+                        type: "list",
+                        message: "Which department would you like to delete?",
+                        name: "deptDelete",
+                        choices: function() {
+                            var depts = [];
+                            for (var i = 0; i < res.length; i++) {
+                                depts.push(res[i].id + " " + res[i].name);
+                            }
+
+                            return depts;
+                        }
+                    }).then(function(department) {
+                        var deptArray = department.deptDelete.split(" ");
+                        var id = deptArray[0];
+                        var query = connection.query(
+                            `DELETE FROM departments WHERE id = ${id}`,
+                            function(err){
+                                if (err)throw err;
+                                console.log(`\n \nDepartment succesfully deleted.`);
+                                runApp();
+                            }
+                        )
+                        
+                    })
+                }
+            )
+        }
+    })   
+}
+
+// EDIT ROLES
+
 
 // OTHERS
 
