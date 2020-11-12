@@ -1,5 +1,4 @@
-const util = require("util");
-const fs = require("fs");
+const figlet = require("figlet");
 const inquirer = require("inquirer");
 const mysql = require("mysql");
 // const { allowedNodeEnvironmentFlags } = require("process");
@@ -15,13 +14,22 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
     if (err) throw err;
     console.log(`connected as id ${connection.thread}`);
-    runApp();
+
+    figlet('Employee Tracker', function(err, data) {
+        if (err) {
+            console.log('Something went wrong...');
+            console.dir(err);
+            return;
+        }
+        console.log(data)
+        runApp();
+    });
+ 
 });
 
 // RUN APP
 
 function runApp() {
-    console.log("running app...")
     inquirer.prompt({
         type: "list",
         message: "What would you like to do?",
@@ -36,7 +44,7 @@ function runApp() {
             "Edit Employee Information",
             "Remove Employee", 
             "Edit Departments",
-            "Edit Roles",
+            // "Edit Roles",
             "EXIT"
         ]
     }).then(function(choice) {
@@ -60,11 +68,19 @@ function runApp() {
 // VIEW DATA
 
 function viewAll(){
+    figlet('All Employees', function(err, data) {
+        if (err) {
+            console.log('Something went wrong...');
+            console.dir(err);
+            return;
+        }
+        console.log(data)
+    });
+
     var query = connection.query(
         "SELECT * FROM employees",
         function (err, res) {
             if (err) throw err;
-            console.log(`\n \nEmployee Data Table`);
             console.table(res);
             runApp();
         }
@@ -72,6 +88,16 @@ function viewAll(){
 };
 
 function viewDepts() {
+
+    figlet('Departments', function(err, data) {
+        if (err) {
+            console.log('Something went wrong...');
+            console.dir(err);
+            return;
+        }
+        console.log(data)
+    });
+
     var query = connection.query(
         "SELECT * FROM departments",
         function(err, res) {
@@ -84,6 +110,16 @@ function viewDepts() {
 };
 
 function viewRoles() {
+
+    figlet('Roles', function(err, data) {
+        if (err) {
+            console.log('Something went wrong...');
+            console.dir(err);
+            return;
+        }
+        console.log(data)
+    });
+
     var query = connection.query(
         "SELECT * FROM roles",
         function(err, res) {
@@ -93,7 +129,7 @@ function viewRoles() {
             runApp();
         }
     )
-}
+};
 
 // VIEW EMPLOYEES BY DEPARTMENT
 
@@ -107,7 +143,7 @@ function byDepts(){
             inquirer.prompt({
                 type: "list",
                 message: "Choose a department to pull up: ",
-                name: "depChoice",
+                name: "deptChoice",
                 choices: function() {
                     const depts = [];
                     for (var i = 0; i < res.length; i++) {
@@ -117,34 +153,30 @@ function byDepts(){
                     return depts;
                 }
             }).then(function(choice) {
-                var query = connection.query(
-                    `SELECT * FROM departments WHERE name = '${choice.depChoice}';`,
-                    function(err, res) {
+                connection.query (
+                    `SELECT * FROM roles WHERE department_id = (SELECT id FROM departments WHERE name = '${choice.deptChoice}');`,
+                    function(err, result) {
                         if (err) throw err;
-                        var query = connection.query(
-                            `SELECT * FROM roles WHERE department_id = '${res[0].id}';`,
-                            function(err, result) {
-                                if (err) throw err;
-                                console.log(`Fetching ${choice.depChoice} Department Data...`);
-                                for (var i = 0; i < result.length; i++) {
-                                    var query = connection.query(
-                                        `SELECT * FROM employees WHERE role_id = '${result[i].id}';`,
-                                        function(err, data) {
-                                            if (err) throw err;
-                                            console.table(data)
-                                        }
-                                    )
+                        for (var i = 0; i < result.length; i++) {
+                            connection.query(
+                                `SELECT * FROM employees WHERE role_id = ${result[i].id}`,
+                                function(err, response) {
+                                    if (err) throw err;
+                                    
+                                    for (var j = 0; j < response.length; j++) {
+                                        console.log("\n");
+                                        console.table(response[j]);
+                                    }
                                 }
-                            }
-                        )
-                    }      
-                ); 
+                            ) 
+                        }
+
+                        runApp();
+                    }
+                )
             })
         }
     )
-
-
-    runApp();
 };
 
 // VIEW EMPLOYEES BY MANAGER
